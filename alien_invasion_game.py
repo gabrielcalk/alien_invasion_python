@@ -1,11 +1,11 @@
 # We’ll use tools in the sys module to exit the game when the player quits.
 import sys
-
-# making an instance of Settings in the project and use it to access our settings
-from settings import Settings
-
 # The pygame module contains the functionality we need to make a game
 import pygame
+
+# making an instance of Settings in the project and use it to access our settings
+from settings.settings import Settings
+from ship import Ship
 
 
 class AlienInvasion:
@@ -26,6 +26,8 @@ class AlienInvasion:
         # this function will change the name on the window.
         pygame.display.set_caption("Alien Invasion")
 
+        self.ship = Ship(self)
+
     # The game is controlled by the run_game() method
     def run_game(self):
         # Start the main loop for the game
@@ -41,6 +43,8 @@ class AlienInvasion:
 
             # We fill the screen with the background color using the fill() method, which acts on a surface and takes only one argument: a color.
             self.screen.fill(self.settings.bg_color)
+            
+            self.ship.blitme()
 
             # The call to pygame.display.flip() tells Pygame to make the most recently drawn screen visible
             # When we move the game elements around, pygame.display.flip() continually updates the display to show the new positions of game elements and hides the old ones, creating the illusion of smooth movement.
