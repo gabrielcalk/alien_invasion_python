@@ -15,3 +15,4 @@ loses a ship. If the player loses three ships, the game ends.
  ```
 This command tells Python to run the pip module and install the pygame package to the current user’s Python installation
 
+![image](https://user-images.githubusercontent.com/89816900/152599611-ba3f8a7b-09f9-4f23-b130-2357d032abd4.png)
