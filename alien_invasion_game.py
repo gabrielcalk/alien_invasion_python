@@ -14,6 +14,8 @@ from special_bullet import SpeacialBullet
 from alien import Alien
 from game_stats import GameStats
 from button import Button
+from scoreboard import Scoreboard
+
 
 
 class AlienInvasion:
@@ -44,6 +46,8 @@ class AlienInvasion:
         pygame.display.set_caption("Alien Invasion")
 
         self.stats = GameStats(self)
+        self.sb = Scoreboard(self)
+
 
         # passing the game to the ship
         self.ship = Ship(self)
@@ -81,7 +85,8 @@ class AlienInvasion:
                 self._update_bullets()
                 self._update_aliens()
                 # updating the screen
-                self._update_screen()
+            
+            self._update_screen()
 
     # A helper methods does work inside a class but isn’t meant to be called through an instance.
     # In Python, a single leading underscore indicates a helper method
@@ -95,12 +100,42 @@ class AlienInvasion:
             # when the player clicks the game window’s close button, a pygame.QUIT event is detected and we call sys.exit() to exit the game
             if event.type == pygame.QUIT:
                 sys.exit()
+
+# Pygame detects a MOUSEBUTTONDOWN event when the player clicks anywhere
+# on the screen u, but we want to restrict our game to respond to mouse clicks
+# only on the Play button. To accomplish this, we use pygame.mouse.get_pos(),
+# which returns a tuple containing the mouse cursor’s x- and y-coordinates
+# when the mouse button is clicked v. We send these values to the new
+# method _check_play_button()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
+
             # Each keypress is registered as a KEYDOWN event
             elif event.type == pygame.KEYDOWN:
                 self._check_keydown_events(event)
 
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+
+    def _check_play_button(self, mouse_pos):
+        # collidepoint() to check whether the point of the
+        # mouse click overlaps the region defined by the Play button’s rect u
+        if self.play_button.rect.collidepoint(mouse_pos) and not self.stats.game_active:
+            self.settings.initialize_dynamic_settings()
+            # Hide the mouse cursor.
+            pygame.mouse.set_visible(False)
+
+            self.stats.reset_stats()
+            self.stats.game_active = True
+            self.sb.prep_score()
+
+
+            # Get rid of any remaining aliens and bullets.
+            self.aliens.empty()
+            self.bullets.empty()
+            self._create_fleet()
+            self.ship.center_ship()
 
     def _check_keydown_events(self, event):
         if event.key == pygame.K_RIGHT:
@@ -155,6 +190,10 @@ class AlienInvasion:
         collisions = pygame.sprite.groupcollide(
             self.bullets, self.aliens, True, True)
 
+        if collisions:
+            self.stats.score += self.settings.alien_points
+            self.sb.prep_score()
+
         # The two True arguments tell Pygame to delete the bullets and aliens that have collided
         # (To make a high-powered bullet that can travel to the top of the screen, destroying every alien in its
         # path, you could set the first Boolean argument to False and keep the second
@@ -162,8 +201,14 @@ class AlienInvasion:
         collisions = pygame.sprite.groupcollide(
             self.special_bullets, self.aliens, False, True)
 
+        if collisions:
+            self.stats.score += self.settings.alien_points
+            self.sb.prep_score()
+
         if not self.aliens:
             self._create_fleet()
+            self.settings.increase_speed()
+
 
     def _fire_bullet(self):
         if len(self.bullets) < self.settings.bullets_allowed:
@@ -256,6 +301,8 @@ class AlienInvasion:
         # requires one argument: a surface on which to draw the elements from the group
         self.aliens.draw(self.screen)
 
+        self.sb.show_score()
+
         if not self.stats.game_active:
             self.play_button.draw_button()
 
@@ -281,6 +328,8 @@ class AlienInvasion:
             sleep(0.5)
         else:
             self.stats.game_active = False
+            pygame.mouse.set_visible(True)
+
 
 
 # We place run_game() in an if block that only runs if the file is called directly
